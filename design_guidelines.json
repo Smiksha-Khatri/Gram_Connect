@@ -1,0 +1,162 @@
+{
+  "project_name": "VillageConnect",
+  "design_philosophy": {
+    "theme": "Light",
+    "archetype": "Organic & Earthy",
+    "core_concept": "Digital Village Square - Authentic, Warm, Trustworthy",
+    "emotional_tone": "Grounded, Community-focused, Transparent, Nutritious"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Playfair Display, serif",
+      "body": "Nunito, sans-serif",
+      "accent": "Caveat, handwriting"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-6xl font-bold tracking-tight leading-none",
+      "h2": "text-3xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-medium",
+      "body_lg": "text-lg md:text-xl leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "caption": "text-sm text-muted-foreground",
+      "label": "text-xs font-bold uppercase tracking-widest text-muted-foreground"
+    },
+    "usage_rules": [
+      "Use 'Playfair Display' for all Section Headings and Farmer Names to evoke storytelling.",
+      "Use 'Nunito' for all UI elements, product descriptions, and dashboard data.",
+      "Use 'Caveat' for decorative elements like 'Authentic', '100% Organic' badges or testimonial signatures."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#E07A5F",
+        "foreground": "#FFFFFF",
+        "hover": "#D0694E",
+        "description": "Terracotta - Used for Primary CTAs (Buy, Add to Cart)"
+      },
+      "secondary": {
+        "DEFAULT": "#81B29A",
+        "foreground": "#FFFFFF",
+        "hover": "#6F9E88",
+        "description": "Sage Green - Used for Trust signals, 'Certified Organic' badges, Success states"
+      },
+      "background": {
+        "DEFAULT": "#F4F1DE",
+        "paper": "#FFFFFF",
+        "subtle": "#EBE9D7",
+        "description": "Warm Sand - Main background color. Avoid pure white #FFFFFF for main bg."
+      },
+      "text": {
+        "primary": "#3D405B",
+        "secondary": "#5F637A",
+        "muted": "#8D91A8",
+        "description": "Deep Charcoal - High contrast against Warm Sand."
+      },
+      "accent": {
+        "yellow": "#F2CC8F",
+        "orange": "#F4A261",
+        "brown": "#5F4B3B",
+        "description": "Mustard/Earth - Used for highlights, stars, warnings."
+      }
+    },
+    "gradients": {
+      "hero_overlay": "linear-gradient(180deg, rgba(61, 64, 91, 0) 0%, rgba(61, 64, 91, 0.8) 100%)",
+      "card_hover": "linear-gradient(45deg, rgba(224, 122, 95, 0.05) 0%, rgba(129, 178, 154, 0.05) 100%)"
+    }
+  },
+  "ui_components": {
+    "buttons": {
+      "primary": "bg-[#E07A5F] text-white hover:bg-[#D0694E] rounded-full px-8 py-3 font-semibold shadow-md transition-transform active:scale-95",
+      "secondary": "bg-[#81B29A] text-white hover:bg-[#6F9E88] rounded-full px-6 py-2 font-medium shadow-sm",
+      "outline": "border-2 border-[#E07A5F] text-[#E07A5F] hover:bg-[#E07A5F] hover:text-white rounded-full px-6 py-2 font-medium bg-transparent transition-colors",
+      "ghost": "text-[#3D405B] hover:bg-[#F2CC8F]/20 rounded-lg px-4 py-2"
+    },
+    "cards": {
+      "product": "bg-white rounded-2xl shadow-sm border border-[#EBE9D7] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden",
+      "story": "bg-[#F4F1DE] rounded-xl p-6 border-l-4 border-[#E07A5F] italic font-serif text-[#3D405B]"
+    },
+    "inputs": {
+      "default": "bg-white border-[#81B29A]/30 focus:border-[#E07A5F] focus:ring-2 focus:ring-[#E07A5F]/20 rounded-lg px-4 py-3 placeholder:text-[#8D91A8]",
+      "search": "rounded-full bg-white shadow-sm border-none pl-12 pr-4 py-3 focus:ring-2 focus:ring-[#E07A5F]/20"
+    }
+  },
+  "layout_strategies": {
+    "grid_system": {
+      "products": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8",
+      "dashboard": "grid grid-cols-1 lg:grid-cols-12 gap-6",
+      "bento_profile": "grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4 h-auto md:h-[600px]"
+    },
+    "spacing": {
+      "section_padding": "py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto",
+      "container_padding": "p-6 md:p-8"
+    }
+  },
+  "visual_enhancers": {
+    "textures": {
+      "noise": "bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20",
+      "paper": "Use subtle paper texture overlay on Story sections"
+    },
+    "shadows": {
+      "soft": "shadow-[0_4px_20px_rgba(61,64,91,0.05)]",
+      "hover": "shadow-[0_10px_40px_rgba(224,122,95,0.15)]"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "large": "rounded-2xl",
+      "pill": "rounded-full"
+    }
+  },
+  "images": {
+    "categories": {
+      "farmers": {
+        "description": "Authentic portraits of Indian farmers in fields, looking at camera or working.",
+        "urls": [
+          "https://images.pexels.com/photos/20445181/pexels-photo-20445181.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "https://images.unsplash.com/photo-1643474004250-05d73e1473e0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHw0fHxJbmRpYW4lMjBmYXJtZXIlMjBpbiUyMGZpZWxkJTIwaG9sZGluZyUyMGNyb3BzJTIwb3JnYW5pYyUyMGZhcm1pbmd8ZW58MHx8fHwxNzcyMTA2MzQ2fDA&ixlib=rb-4.1.0&q=85",
+          "https://images.unsplash.com/photo-1594179131702-112ff2a880e4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxJbmRpYW4lMjBmYXJtZXIlMjBpbiUyMGZpZWxkJTIwaG9sZGluZyUyMGNyb3BzJTIwb3JnYW5pYyUyMGZhcm1pbmd8ZW58MHx8fHwxNzcyMTA2MzQ2fDA&ixlib=rb-4.1.0&q=85"
+        ]
+      },
+      "products": {
+        "description": "High quality shots of spices, vegetables, grains in natural containers (baskets, clay pots).",
+        "urls": [
+          "https://images.pexels.com/photos/6808985/pexels-photo-6808985.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "https://images.pexels.com/photos/5656730/pexels-photo-5656730.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "https://images.pexels.com/photos/9110517/pexels-photo-9110517.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+        ]
+      },
+      "village_vibes": {
+        "description": "Atmospheric shots of village life, mud houses, landscapes.",
+        "urls": [
+          "https://images.pexels.com/photos/31715061/pexels-photo-31715061.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+          "https://images.pexels.com/photos/35396160/pexels-photo-35396160.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+        ]
+      }
+    }
+  },
+  "libraries": {
+    "icons": "lucide-react (Use standard set: Leaf, Sprout, Tractor, ShoppingBasket, Heart, User, Menu)",
+    "animations": "framer-motion (Use for page transitions and scroll reveals)",
+    "ui_framework": "shadcn/ui (Heavily customized with 'colors' and 'radius' variables)",
+    "notifications": "sonner"
+  },
+  "instructions_to_main_agent": [
+    "1. **Mobile-First is LAW**: Start every component with mobile styles (base classes) then add `md:` and `lg:` overrides. The village users will primarily use phones.",
+    "2. **The 'Story' is the Product**: When designing the Product Detail Page, the 'Meet the Farmer' section is as important as the 'Add to Cart' button. It shouldn't be hidden in a tab.",
+    "3. **No 'Tech' Gradients**: Avoid blue/purple tech gradients. Use the defined Earthy gradients.",
+    "4. **Authentication**: Use a simple, phone-number-centric design pattern if possible (or email with clear labels).",
+    "5. **Images**: Use the provided image URLs for specific categories. Do not use placeholders.",
+    "6. **Accessibility**: Ensure text on the 'Warm Sand' background has high contrast (use the 'Deep Charcoal' text color).",
+    "7. **Navigation**: Use a Bottom Navigation Bar for mobile users (Home, Search, Cart, Profile) instead of a top hamburger menu for core actions."
+  ],
+  "universal_guidelines": [
+    "Don't make generic centered layouts.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Subtle grain textures, noise overlays, custom cursors.",
+    "All interactive elements MUST include a `data-testid` attribute.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ]
+}
