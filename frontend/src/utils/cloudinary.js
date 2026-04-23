@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { API } from '../App';
 
 export const uploadToCloudinary = async (file, folder = 'products', token) => {
   try {
-    const sigResponse = await axios.get(`/cloudinary/signature?folder=${folder}`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const sigResponse = await axios.get('/cloudinary/signature', {
+      params: { folder },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
 
     const { signature, timestamp, cloud_name, api_key } = sigResponse.data;
@@ -20,9 +20,13 @@ export const uploadToCloudinary = async (file, folder = 'products', token) => {
       `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
       {
         method: 'POST',
-        body: formData
+        body: formData,
       }
     );
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Cloudinary upload failed: ${uploadResponse.status}`);
+    }
 
     const data = await uploadResponse.json();
     return data.secure_url;

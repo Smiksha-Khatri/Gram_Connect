@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import API from "../api";
+import axios from 'axios';
 import { useAuth } from '../App';
 import { Navbar } from '../components/shared/Navbar';
 import { Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
@@ -12,7 +12,7 @@ const RegisterPage = () => {
     password: '',
     name: '',
     phone: '',
-    role: 'customer'
+    role: 'customer',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,19 +29,22 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const response = await API.post('/api/auth/register', formData);
+      const response = await axios.post('/auth/register', formData);
       const { access_token, user } = response.data;
-      
+
       login(access_token, user);
       toast.success('Account created successfully!');
-      
+
       if (user.role === 'customer') {
         navigate('/products');
       } else if (user.role === 'seller') {
         navigate('/seller/store-setup');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setError(
+        err.response?.data?.detail ||
+          'Registration failed. Please try again.'
+      );
       toast.error('Registration failed');
     } finally {
       setLoading(false);
@@ -54,13 +57,21 @@ const RegisterPage = () => {
       <div className="section-padding">
         <div className="max-w-md mx-auto">
           <div className="card p-8">
-            <h1 className="text-3xl font-heading font-bold text-[#3D405B] mb-2 text-center" data-testid="register-title">
+            <h1
+              className="text-3xl font-heading font-bold text-[#3D405B] mb-2 text-center"
+              data-testid="register-title"
+            >
               Join Gram Connect
             </h1>
-            <p className="text-[#5F637A] text-center mb-8">Create your account</p>
+            <p className="text-[#5F637A] text-center mb-8">
+              Create your account
+            </p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start" data-testid="register-error">
+              <div
+                className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start"
+                data-testid="register-error"
+              >
                 <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-700">{error}</p>
               </div>
@@ -74,7 +85,9 @@ const RegisterPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, role: 'customer' })}
+                    onClick={() =>
+                      setFormData({ ...formData, role: 'customer' })
+                    }
                     className={`p-4 rounded-lg border-2 transition-all ${
                       formData.role === 'customer'
                         ? 'border-[#E07A5F] bg-[#E07A5F]/5'
@@ -87,7 +100,9 @@ const RegisterPage = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, role: 'seller' })}
+                    onClick={() =>
+                      setFormData({ ...formData, role: 'seller' })
+                    }
                     className={`p-4 rounded-lg border-2 transition-all ${
                       formData.role === 'seller'
                         ? 'border-[#E07A5F] bg-[#E07A5F]/5'
@@ -106,7 +121,7 @@ const RegisterPage = () => {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8]" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8] pointer-events-none" />
                   <input
                     type="text"
                     name="name"
@@ -125,7 +140,7 @@ const RegisterPage = () => {
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8]" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8] pointer-events-none" />
                   <input
                     type="email"
                     name="email"
@@ -144,7 +159,7 @@ const RegisterPage = () => {
                   Phone (Optional)
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8]" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8] pointer-events-none" />
                   <input
                     type="tel"
                     name="phone"
@@ -162,7 +177,7 @@ const RegisterPage = () => {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8]" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#8D91A8] pointer-events-none" />
                   <input
                     type="password"
                     name="password"
@@ -188,7 +203,11 @@ const RegisterPage = () => {
 
             <p className="mt-6 text-center text-sm text-[#5F637A]">
               Already have an account?{' '}
-              <Link to="/login" className="text-[#E07A5F] hover:text-[#D0694E] font-semibold" data-testid="register-login-link">
+              <Link
+                to="/login"
+                className="text-[#E07A5F] hover:text-[#D0694E] font-semibold"
+                data-testid="register-login-link"
+              >
                 Login
               </Link>
             </p>

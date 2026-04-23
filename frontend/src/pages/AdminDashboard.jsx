@@ -14,5 +14,4 @@ const AdminDashboard = () => {
     </div>
   );
 };
-console.log(process.env.REACT_APP_API_URL);
 export default AdminDashboard;

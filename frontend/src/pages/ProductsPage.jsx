@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Navbar } from '../components/shared/Navbar';
 import { Footer } from '../components/shared/Footer';
 import { BottomNav } from '../components/shared/BottomNav';
 import { Search, Leaf } from 'lucide-react';
-import { useCallback } from "react";
+
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ const ProductsPage = () => {
     organic: null,
     minPrice: '',
     maxPrice: '',
-    village: ''
+    village: '',
   });
 
   const fetchProducts = useCallback(async () => {
@@ -29,28 +29,35 @@ const ProductsPage = () => {
       if (filters.village) params.village = filters.village;
       if (searchQuery) params.search = searchQuery;
 
-      const response = await axios.get(`${API}/products`, { params });
+      const response = await axios.get('/products', { params });
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
-  },[filters.category, filters.maxPrice, filters.minPrice, filters.organic, filters.village, searchQuery]);
+  }, [
+    filters.category,
+    filters.maxPrice,
+    filters.minPrice,
+    filters.organic,
+    filters.village,
+    searchQuery,
+  ]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     fetchProducts();
   };
-  
-useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
 
   return (
     <div className="min-h-screen">
       <Navbar />
-      
+
       <div className="section-padding">
         <form onSubmit={handleSearch} className="mb-6">
           <div className="relative max-w-2xl mx-auto">
@@ -81,7 +88,12 @@ useEffect(() => {
 
           <select
             value={filters.organic === null ? '' : filters.organic}
-            onChange={(e) => setFilters({ ...filters, organic: e.target.value === '' ? null : e.target.value === 'true' })}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                organic: e.target.value === '' ? null : e.target.value === 'true',
+              })
+            }
             className="input-field"
             data-testid="products-organic-filter"
           >
@@ -117,7 +129,10 @@ useEffect(() => {
           />
         </div>
 
-        <h1 className="text-3xl font-heading font-bold text-[#3D405B] mb-6" data-testid="products-title">
+        <h1
+          className="text-3xl font-heading font-bold text-[#3D405B] mb-6"
+          data-testid="products-title"
+        >
           All Products ({products.length})
         </h1>
 
@@ -140,7 +155,10 @@ useEffect(() => {
               >
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={product.images[0] || 'https://images.pexels.com/photos/6808985/pexels-photo-6808985.jpeg?w=500'}
+                    src={
+                      product.images[0] ||
+                      'https://images.pexels.com/photos/6808985/pexels-photo-6808985.jpeg?w=500'
+                    }
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
@@ -151,12 +169,20 @@ useEffect(() => {
                       <Leaf className="w-3 h-3 mr-1" /> Organic
                     </span>
                   )}
-                  <h3 className="text-lg font-semibold text-[#3D405B] mb-1">{product.name}</h3>
-                  <p className="text-sm text-[#5F637A] mb-2 line-clamp-2">{product.description}</p>
+                  <h3 className="text-lg font-semibold text-[#3D405B] mb-1">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-[#5F637A] mb-2 line-clamp-2">
+                    {product.description}
+                  </p>
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-2xl font-bold text-[#E07A5F]">₹{product.price}</span>
-                      <span className="text-sm text-[#8D91A8] ml-1">/{product.unit}</span>
+                      <span className="text-2xl font-bold text-[#E07A5F]">
+                        ₹{product.price}
+                      </span>
+                      <span className="text-sm text-[#8D91A8] ml-1">
+                        /{product.unit}
+                      </span>
                     </div>
                   </div>
                 </div>

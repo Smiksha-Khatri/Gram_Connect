@@ -6,7 +6,7 @@ import { Footer } from '../components/shared/Footer';
 import { BottomNav } from '../components/shared/BottomNav';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
-import API from "../api";
+
 const CartPage = () => {
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const CartPage = () => {
 
   const fetchCart = async () => {
     try {
-      const response = await API.get('/api/cart');
+      const response = await axios.get('/cart');
       setCart(response.data);
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -60,9 +60,12 @@ const CartPage = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      
+
       <div className="section-padding">
-        <h1 className="text-3xl font-heading font-bold text-[#3D405B] mb-8" data-testid="cart-title">
+        <h1
+          className="text-3xl font-heading font-bold text-[#3D405B] mb-8"
+          data-testid="cart-title"
+        >
           Shopping Cart
         </h1>
 
@@ -82,19 +85,34 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {cart.items.map((item) => (
-                <div key={item.product_id} className="card p-6 flex gap-6" data-testid={`cart-item-${item.product_id}`}>
+                <div
+                  key={item.product_id}
+                  className="card p-6 flex gap-6"
+                  data-testid={`cart-item-${item.product_id}`}
+                >
                   <img
-                    src={item.product.images[0] || 'https://images.pexels.com/photos/6808985/pexels-photo-6808985.jpeg?w=200'}
+                    src={
+                      item.product.images[0] ||
+                      'https://images.pexels.com/photos/6808985/pexels-photo-6808985.jpeg?w=200'
+                    }
                     alt={item.product.name}
                     className="w-24 h-24 object-cover rounded-lg"
                   />
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-[#3D405B] mb-1">{item.product.name}</h3>
-                    <p className="text-sm text-[#5F637A] mb-2">{item.product.category}</p>
+                    <h3 className="text-lg font-semibold text-[#3D405B] mb-1">
+                      {item.product.name}
+                    </h3>
+                    <p className="text-sm text-[#5F637A] mb-2">
+                      {item.product.category}
+                    </p>
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-xl font-bold text-[#E07A5F]">₹{item.product.price}</span>
-                        <span className="text-sm text-[#8D91A8] ml-1">x {item.quantity}</span>
+                        <span className="text-xl font-bold text-[#E07A5F]">
+                          ₹{item.product.price}
+                        </span>
+                        <span className="text-sm text-[#8D91A8] ml-1">
+                          x {item.quantity}
+                        </span>
                       </div>
                       <div className="text-lg font-bold text-[#3D405B]">
                         ₹{item.item_total}
@@ -114,20 +132,36 @@ const CartPage = () => {
 
             <div className="lg:col-span-1">
               <div className="card p-6 sticky top-24">
-                <h2 className="text-xl font-heading font-semibold text-[#3D405B] mb-4">Order Summary</h2>
-                
+                <h2 className="text-xl font-heading font-semibold text-[#3D405B] mb-4">
+                  Order Summary
+                </h2>
+
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span className="text-[#5F637A]">Subtotal ({cart.items.length} items)</span>
-                    <span className="font-semibold text-[#3D405B]" data-testid="cart-subtotal">₹{cart.total}</span>
+                    <span className="text-[#5F637A]">
+                      Subtotal ({cart.items.length} items)
+                    </span>
+                    <span
+                      className="font-semibold text-[#3D405B]"
+                      data-testid="cart-subtotal"
+                    >
+                      ₹{cart.total}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#5F637A]">Delivery</span>
                     <span className="font-semibold text-[#81B29A]">FREE</span>
                   </div>
                   <div className="border-t border-[#EBE9D7] pt-3 flex justify-between">
-                    <span className="text-lg font-semibold text-[#3D405B]">Total</span>
-                    <span className="text-2xl font-bold text-[#E07A5F]" data-testid="cart-total">₹{cart.total}</span>
+                    <span className="text-lg font-semibold text-[#3D405B]">
+                      Total
+                    </span>
+                    <span
+                      className="text-2xl font-bold text-[#E07A5F]"
+                      data-testid="cart-total"
+                    >
+                      ₹{cart.total}
+                    </span>
                   </div>
                 </div>
 
