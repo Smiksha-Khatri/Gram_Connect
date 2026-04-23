@@ -1,96 +1,108 @@
 # Gram Connect
 
-A full-stack e-commerce marketplace connecting rural farmers directly with urban consumers, eliminating middlemen and ensuring fair prices for authentic organic products.
-
-## Features
-
-### Core Features Implemented
-
-#### Authentication & User Roles
-- **Customer**: Browse products, add to cart, checkout with Razorpay, view order history
-- **Seller**: Create store with farmer story, manage products and inventory, view orders
-- JWT-based secure authentication with password hashing
-
-#### Customer Features
-- Browse and search products with filters (category, price, organic, village)
-- View product details with complete farmer story
-- Shopping cart management
-- Secure checkout with Razorpay payment gateway
-- Order history and tracking
-- Bottom navigation for mobile users
-
-#### Seller Features
-- Personal store setup with unique URL
-- Add farmer story (village, farming practices, family background)
-- Product management (add, view, delete)
-- Image uploads via Cloudinary
-- Order management
-- Revenue tracking
-
-#### Homepage
-- Hero section with mission statement
-- Featured farmers and products
-- How it works section
-- Impact metrics
-- Mobile-first responsive design
-
-## Tech Stack
-
-### Backend
-- **FastAPI** - High-performance Python web framework
-- **MongoDB** - NoSQL database (Motor async driver)
-- **JWT** - Secure authentication
-- **Cloudinary** - Image storage and CDN
-- **Razorpay** - Payment gateway integration
-- **Resend** - Email notifications
-
-### Frontend
-- **React 19** - UI library
-- **React Router** - Client-side routing
-- **Axios** - HTTP client
-- **Tailwind CSS** - Utility-first CSS
-- **Shadcn UI** - Component library
-- **Lucide React** - Icons
-- **Sonner** - Toast notifications
-- **react-razorpay** - Payment integration
-
-## Design System
-
-### Colors
-- **Primary (Terracotta)**: `#E07A5F` - CTA buttons, emphasis
-- **Secondary (Sage Green)**: `#81B29A` - Organic badges, trust signals
-- **Background (Warm Sand)**: `#F4F1DE` - Main background
-- **Text (Deep Charcoal)**: `#3D405B` - Primary text
-- **Accent (Mustard)**: `#F2CC8F` - Highlights, warnings
-
-### Typography
-- **Headings**: Playfair Display (serif) - Storytelling feel
-- **Body**: Nunito (sans-serif) - Friendly, readable
-- **Accent**: Caveat (handwriting) - Decorative elements
-
-## Test Accounts
-
-**Seller Account (Ramesh Kumar)**
-- Email: ramesh@village.com
-- Password: seller123
-- Has store and products pre-loaded
-
-**Customer Account (Priya Sharma)**
-- Email: customer@example.com
-- Password: customer123
-
-**Admin Account**
-- Email: admin@gramconnect.com
-- Password: admin123
-
-## Database Collections
-
-- **users**: User accounts (customer/seller/admin)
-- **stores**: Seller store information with farmer stories
-- **products**: Product listings
-- **carts**: Customer shopping carts
-- **orders**: Order history with payment info
+A scalable full-stack social platform designed to enable seamless user interaction, content sharing, and modern digital engagement. Built with a performance-focused backend and a responsive, user-centric frontend, Gram Connect demonstrates real-world application architecture and integration of modern technologies.
 
 ---
 
-**Built with ❤️ for Indian farmers**
+## Overview
+
+Gram Connect is a production-style web application that combines robust backend services with an intuitive frontend interface. The platform allows users to create profiles, share content, and interact in a dynamic environment while ensuring scalability, security, and performance.
+
+---
+
+## Core Features
+
+### Authentication & Security
+- JWT-based authentication system
+- Secure password hashing
+- Protected API routes and session handling
+
+### User Management
+- User registration and login system  
+- Profile creation and customization  
+- Persistent user data storage  
+
+### Media Handling
+- Efficient image upload and storage  
+- Optimized media delivery  
+- Cloud-based asset management  
+
+### Social Functionality
+- Create, manage, and interact with posts  
+- Dynamic user engagement system  
+- Scalable content handling  
+
+### Payment Capability
+- Integrated payment workflow  
+- Secure transaction handling  
+- Real-world payment use-case implementation  
+
+### Communication System
+- Email-based interaction support  
+- Notification-ready architecture  
+
+---
+
+## Architecture
+
+The application follows a **modern full-stack architecture**:
+
+- **Frontend Layer**: Responsive UI with component-based design  
+- **Backend Layer**: RESTful API with asynchronous handling  
+- **Database Layer**: NoSQL database optimized for scalability  
+- **External Services**: Cloud storage and payment systems  
+
+---
+
+## Technical Highlights
+
+- Asynchronous backend for high performance  
+- Clean API design following REST principles  
+- Modular frontend component structure  
+- Scalable database integration  
+- Real-world third-party service usage  
+- Secure authentication and data handling  
+
+---
+
+## Design Philosophy
+
+- **User-Centric**: Smooth and intuitive experience  
+- **Scalable**: Built to handle growth and extension  
+- **Modular**: Easy to maintain and expand  
+- **Performance-Oriented**: Optimized for speed and efficiency  
+
+---
+
+## Project Significance
+
+This project demonstrates:
+
+- Real-world full-stack development capability  
+- Understanding of system design and architecture  
+- Integration of multiple technologies into one product  
+- Ability to build scalable and production-ready applications  
+
+---
+
+## Future Scope
+
+- Real-time features using WebSockets  
+- AI-driven recommendations and personalization  
+- Advanced analytics dashboard  
+- Mobile-first optimization  
+- Deployment with CI/CD pipelines  
+
+---
+
+## Author
+
+**Smiksha Khatri**  
+
+---
+
+## ⭐ Acknowledgment
+
+If you find this project valuable, consider giving it a star ⭐ and sharing your feedback.
+
+---
