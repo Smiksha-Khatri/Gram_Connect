@@ -40,7 +40,7 @@ if not MONGO_URL:
 if not JWT_SECRET:
     raise RuntimeError("JWT_SECRET environment variable is required")
 
-# CORS — read a comma-separated list from env, fallback to common dev ports
+# CORS
 _default_origins = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
 CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", _default_origins).split(",") if o.strip()]
 
@@ -53,24 +53,30 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 # ==================== CLOUDINARY ====================
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+
 cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
     secure=True,
 )
 
-# ==================== RAZORPAY (lazy / safe) ====================
+# ==================== RAZORPAY ====================
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 razorpay_client = None
 if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 else:
-    logger.warning("Razorpay credentials missing — payment endpoints will return 503")
+    logger.warning("Razorpay credentials missing")
 
 # ==================== RESEND ====================
-resend.api_key = os.environ.get("RESEND_API_KEY")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
 
 # ==================== APP / LIFESPAN ====================
@@ -310,7 +316,7 @@ def require_role(roles: List[str]):
 # ==================== AUTH ====================
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_input: UserRegister):
-    if await db.users.find_one({"email": user_input.email}, {"_id": 0}):
+    if await db.users.find_one({"email": user_input.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_data = user_input.model_dump()
@@ -325,12 +331,12 @@ async def register(user_input: UserRegister):
 
 @api_router.post("/auth/login", response_model=Token)
 async def login(user_input: UserLogin):
-    user = await db.users.find_one({"email": user_input.email}, {"_id": 0})
+    user = await db.users.find_one({"email": user_input.email})
     if not user or not verify_password(user_input.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     token = create_access_token({"user_id": user["user_id"], "role": user["role"]})
-    user_data = {k: v for k, v in user.items() if k != "password_hash"}
+    user_data = {k: v for k, v in user.items() if k not in ("_id", "password_hash")}
     return Token(access_token=token, token_type="bearer", user=user_data)
 
 @api_router.get("/auth/me")
@@ -349,14 +355,15 @@ async def generate_cloudinary_signature(
         raise HTTPException(status_code=400, detail="Invalid folder path")
 
     timestamp = int(time.time())
-    params = {"timestamp": timestamp, "folder": folder, "resource_type": resource_type}
-    signature = cloudinary.utils.api_sign_request(params, os.environ.get("CLOUDINARY_API_SECRET"))
+    params = {"timestamp": timestamp, "folder": folder}
+    # Important: api_sign_request does not take resource_type inside the signature params usually
+    signature = cloudinary.utils.api_sign_request(params, CLOUDINARY_API_SECRET)
 
     return {
         "signature": signature,
         "timestamp": timestamp,
-        "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME"),
-        "api_key": os.environ.get("CLOUDINARY_API_KEY"),
+        "cloud_name": CLOUDINARY_CLOUD_NAME,
+        "api_key": CLOUDINARY_API_KEY,
         "folder": folder,
         "resource_type": resource_type,
     }
@@ -367,13 +374,14 @@ async def create_or_update_store(
     store_input: SellerStoreCreate,
     current_user: Dict = Depends(require_role([UserRole.SELLER])),
 ):
-    existing = await db.stores.find_one({"seller_id": current_user["user_id"]}, {"_id": 0})
+    existing = await db.stores.find_one({"seller_id": current_user["user_id"]})
     if existing:
         update_data = store_input.model_dump()
         update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.stores.update_one({"seller_id": current_user["user_id"]}, {"$set": update_data})
         updated = await db.stores.find_one({"seller_id": current_user["user_id"]}, {"_id": 0})
         return SellerStore(**updated)
+    
     store_data = store_input.model_dump()
     store_data["seller_id"] = current_user["user_id"]
     store_obj = SellerStore(**store_data)
@@ -384,19 +392,12 @@ async def create_or_update_store(
 async def get_my_store(current_user: Dict = Depends(require_role([UserRole.SELLER]))):
     store = await db.stores.find_one({"seller_id": current_user["user_id"]}, {"_id": 0})
     if not store:
-        raise HTTPException(status_code=404, detail="Store not found. Please create your store first.")
+        raise HTTPException(status_code=404, detail="Store not found")
     return SellerStore(**store)
 
 @api_router.get("/seller/store/{seller_id}", response_model=SellerStore)
 async def get_store_by_seller(seller_id: str):
     store = await db.stores.find_one({"seller_id": seller_id}, {"_id": 0})
-    if not store:
-        raise HTTPException(status_code=404, detail="Store not found")
-    return SellerStore(**store)
-
-@api_router.get("/seller/store-url/{store_url}", response_model=SellerStore)
-async def get_store_by_url(store_url: str):
-    store = await db.stores.find_one({"store_url": store_url}, {"_id": 0})
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
     return SellerStore(**store)
@@ -425,13 +426,15 @@ async def get_products(
     query: Dict[str, Any] = {}
     if category:
         query["category"] = category
-    price_filter: Dict[str, Any] = {}
+    
+    price_filter = {}
     if min_price is not None:
         price_filter["$gte"] = min_price
     if max_price is not None:
         price_filter["$lte"] = max_price
     if price_filter:
         query["price"] = price_filter
+        
     if organic is not None:
         query["organic_certified"] = organic
     if search:
@@ -440,15 +443,14 @@ async def get_products(
             {"description": {"$regex": search, "$options": "i"}},
         ]
 
-    products = await db.products.find(query, {"_id": 0}).to_list(1000)
-
     if village:
         stores = await db.stores.find(
-            {"village_name": {"$regex": village, "$options": "i"}}, {"_id": 0}
+            {"village_name": {"$regex": village, "$options": "i"}}
         ).to_list(1000)
-        seller_ids = {s["seller_id"] for s in stores}
-        products = [p for p in products if p["seller_id"] in seller_ids]
+        seller_ids = [s["seller_id"] for s in stores]
+        query["seller_id"] = {"$in": seller_ids}
 
+    products = await db.products.find(query, {"_id": 0}).to_list(1000)
     return [Product(**p) for p in products]
 
 @api_router.get("/products/{product_id}", response_model=Product)
@@ -464,11 +466,11 @@ async def update_product(
     product_input: ProductUpdate,
     current_user: Dict = Depends(require_role([UserRole.SELLER])),
 ):
-    product = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    product = await db.products.find_one({"product_id": product_id})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     if product["seller_id"] != current_user["user_id"]:
-        raise HTTPException(status_code=403, detail="Not authorized to update this product")
+        raise HTTPException(status_code=403, detail="Not authorized")
 
     update_data = product_input.model_dump(exclude_unset=True)
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -481,18 +483,13 @@ async def delete_product(
     product_id: str,
     current_user: Dict = Depends(require_role([UserRole.SELLER])),
 ):
-    product = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+    product = await db.products.find_one({"product_id": product_id})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     if product["seller_id"] != current_user["user_id"]:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this product")
+        raise HTTPException(status_code=403, detail="Not authorized")
     await db.products.delete_one({"product_id": product_id})
     return {"message": "Product deleted successfully"}
-
-@api_router.get("/seller/products", response_model=List[Product])
-async def get_seller_products(current_user: Dict = Depends(require_role([UserRole.SELLER]))):
-    products = await db.products.find({"seller_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
-    return [Product(**p) for p in products]
 
 # ==================== CART ====================
 @api_router.post("/cart/add")
@@ -500,28 +497,27 @@ async def add_to_cart(
     item: CartItem,
     current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
 ):
-    cart = await db.carts.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
+    cart = await db.carts.find_one({"customer_id": current_user["user_id"]})
     if not cart:
         cart_obj = Cart(customer_id=current_user["user_id"], items=[item])
         await db.carts.insert_one(cart_obj.model_dump())
-        return {"message": "Item added to cart"}
-
-    items = cart.get("items", [])
-    existing = next((i for i in items if i["product_id"] == item.product_id), None)
-    if existing:
-        existing["quantity"] += item.quantity
     else:
-        items.append(item.model_dump())
+        items = cart.get("items", [])
+        existing = next((i for i in items if i["product_id"] == item.product_id), None)
+        if existing:
+            existing["quantity"] += item.quantity
+        else:
+            items.append(item.model_dump())
 
-    await db.carts.update_one(
-        {"customer_id": current_user["user_id"]},
-        {"$set": {"items": items, "updated_at": datetime.now(timezone.utc).isoformat()}},
-    )
+        await db.carts.update_one(
+            {"customer_id": current_user["user_id"]},
+            {"$set": {"items": items, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
     return {"message": "Item added to cart"}
 
 @api_router.get("/cart")
 async def get_cart(current_user: Dict = Depends(require_role([UserRole.CUSTOMER]))):
-    cart = await db.carts.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
+    cart = await db.carts.find_one({"customer_id": current_user["user_id"]})
     if not cart:
         return {"items": [], "total": 0}
 
@@ -536,37 +532,14 @@ async def get_cart(current_user: Dict = Depends(require_role([UserRole.CUSTOMER]
 
     return {"items": items_with_details, "total": total}
 
-@api_router.delete("/cart/{product_id}")
-async def remove_from_cart(
-    product_id: str,
-    current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
-):
-    cart = await db.carts.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
-    if not cart:
-        raise HTTPException(status_code=404, detail="Cart not found")
-    items = [i for i in cart.get("items", []) if i["product_id"] != product_id]
-    await db.carts.update_one(
-        {"customer_id": current_user["user_id"]},
-        {"$set": {"items": items, "updated_at": datetime.now(timezone.utc).isoformat()}},
-    )
-    return {"message": "Item removed from cart"}
-
-@api_router.delete("/cart")
-async def clear_cart(current_user: Dict = Depends(require_role([UserRole.CUSTOMER]))):
-    await db.carts.update_one(
-        {"customer_id": current_user["user_id"]},
-        {"$set": {"items": [], "updated_at": datetime.now(timezone.utc).isoformat()}},
-    )
-    return {"message": "Cart cleared"}
-
-# ==================== ORDERS ====================
+# ==================== ORDERS & PAYMENTS ====================
 @api_router.post("/orders/create-razorpay-order")
 async def create_razorpay_order(
     order_input: OrderCreate,
     current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
 ):
     if razorpay_client is None:
-        raise HTTPException(status_code=503, detail="Payments are not configured on the server")
+        raise HTTPException(status_code=503, detail="Payments not configured")
     try:
         amount_paise = int(order_input.total_amount * 100)
         razorpay_order = razorpay_client.order.create({
@@ -587,201 +560,70 @@ async def create_razorpay_order(
             "order_id": order_obj.order_id,
             "razorpay_order_id": razorpay_order["id"],
             "amount": amount_paise,
-            "currency": "INR",
             "key_id": RAZORPAY_KEY_ID,
         }
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error creating Razorpay order: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create order")
+        logger.error(f"Razorpay Error: {e}")
+        raise HTTPException(status_code=500, detail="Order creation failed")
 
 @api_router.post("/orders/verify-payment")
 async def verify_payment(
     payment_data: PaymentVerify,
     current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
 ):
-    try:
-        order = await db.orders.find_one(
-            {"razorpay_order_id": payment_data.razorpay_order_id}, {"_id": 0}
-        )
-        if not order:
-            raise HTTPException(status_code=404, detail="Order not found")
+    order = await db.orders.find_one({"razorpay_order_id": payment_data.razorpay_order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
 
-        await db.orders.update_one(
-            {"order_id": order["order_id"]},
-            {"$set": {
-                "payment_id": payment_data.razorpay_payment_id,
-                "status": OrderStatus.CONFIRMED,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }},
+    await db.orders.update_one(
+        {"order_id": order["order_id"]},
+        {"$set": {
+            "payment_id": payment_data.razorpay_payment_id,
+            "status": OrderStatus.CONFIRMED,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+    )
+
+    # Atomic stock decrement
+    for item in order["items"]:
+        await db.products.update_one(
+            {"product_id": item["product_id"]},
+            {"$inc": {"quantity": -item["quantity"]}}
         )
 
-        # Atomic stock decrement
-        for item in order["items"]:
-            await db.products.update_one(
-                {"product_id": item["product_id"]},
-                {"$inc": {"quantity": -item["quantity"]}},
+    await db.carts.update_one({"customer_id": current_user["user_id"]}, {"$set": {"items": []}})
+
+    if SENDER_EMAIL and RESEND_API_KEY:
+        email_html = f"<h2>Order Confirmed</h2><p>ID: {order['order_id']}</p>"
+        try:
+            # Fixed resend call (wrap in to_thread if using sync library in async route)
+            await asyncio.to_thread(
+                resend.Emails.send,
+                {
+                    "from": SENDER_EMAIL,
+                    "to": [order["customer_email"]],
+                    "subject": "Order Confirmed - Gram Connect",
+                    "html": email_html,
+                }
             )
+        except Exception as e:
+            logger.error(f"Email failed: {e}")
 
-        await db.carts.update_one(
-            {"customer_id": current_user["user_id"]},
-            {"$set": {"items": []}},
-        )
-
-        if SENDER_EMAIL and resend.api_key:
-            email_html = f"""
-            <h2>Order Confirmed - Gram Connect</h2>
-            <p>Dear {order['customer_name']},</p>
-            <p>Your order has been confirmed!</p>
-            <p><strong>Order ID:</strong> {order['order_id']}</p>
-            <p><strong>Total Amount:</strong> ₹{order['total_amount']}</p>
-            <p>Thank you for supporting our farmers!</p>
-            """
-            try:
-                await asyncio.to_thread(
-                    resend.Emails.send,
-                    {
-                        "from": SENDER_EMAIL,
-                        "to": [order["customer_email"]],
-                        "subject": "Order Confirmed - Gram Connect",
-                        "html": email_html,
-                    },
-                )
-            except Exception as e:
-                logger.error(f"Failed to send email: {e}")
-        else:
-            logger.info("Email not configured, skipping confirmation email")
-
-        return {"message": "Payment verified successfully", "order_id": order["order_id"]}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error verifying payment: {e}")
-        raise HTTPException(status_code=500, detail="Payment verification failed")
+    return {"message": "Success", "order_id": order["order_id"]}
 
 @api_router.get("/orders")
 async def get_orders(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] == UserRole.CUSTOMER:
-        orders = await db.orders.find({"customer_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
+        query = {"customer_id": current_user["user_id"]}
     elif current_user["role"] == UserRole.SELLER:
-        seller_orders = await db.orders.find(
-            {"items.seller_id": current_user["user_id"]}, {"_id": 0}
-        ).to_list(1000)
-        orders = []
-        for o in seller_orders:
-            o = o.copy()
-            o["items"] = [i for i in o["items"] if i["seller_id"] == current_user["user_id"]]
-            orders.append(o)
+        query = {"items.seller_id": current_user["user_id"]}
     else:
-        orders = await db.orders.find({}, {"_id": 0}).to_list(1000)
+        query = {}
+    
+    orders = await db.orders.find(query, {"_id": 0}).to_list(1000)
     return orders
 
-@api_router.get("/orders/{order_id}")
-async def get_order(order_id: str, current_user: Dict = Depends(get_current_user)):
-    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    if current_user["role"] == UserRole.CUSTOMER and order["customer_id"] != current_user["user_id"]:
-        raise HTTPException(status_code=403, detail="Not authorized to view this order")
-    return order
-
-@api_router.get("/seller/earnings")
-async def get_seller_earnings(current_user: Dict = Depends(require_role([UserRole.SELLER]))):
-    paid_statuses = [OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]
-    orders = await db.orders.find(
-        {"status": {"$in": paid_statuses}, "items.seller_id": current_user["user_id"]},
-        {"_id": 0},
-    ).to_list(1000)
-
-    total_earnings = 0.0
-    total_orders = 0
-    for order in orders:
-        for item in order["items"]:
-            if item["seller_id"] == current_user["user_id"]:
-                total_earnings += item["price"] * item["quantity"]
-                total_orders += 1
-
-    return {"total_earnings": total_earnings, "total_orders": total_orders, "currency": "INR"}
-
-# ==================== WISHLIST ====================
-@api_router.post("/wishlist/add")
-async def add_to_wishlist(
-    payload: WishlistAdd,
-    current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
-):
-    product_id = payload.product_id
-    wishlist = await db.wishlists.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
-    if not wishlist:
-        wishlist_obj = Wishlist(customer_id=current_user["user_id"], product_ids=[product_id])
-        await db.wishlists.insert_one(wishlist_obj.model_dump())
-        return {"message": "Product added to wishlist"}
-
-    product_ids = wishlist.get("product_ids", [])
-    if product_id not in product_ids:
-        product_ids.append(product_id)
-        await db.wishlists.update_one(
-            {"customer_id": current_user["user_id"]},
-            {"$set": {"product_ids": product_ids, "updated_at": datetime.now(timezone.utc).isoformat()}},
-        )
-    return {"message": "Product added to wishlist"}
-
-@api_router.get("/wishlist")
-async def get_wishlist(current_user: Dict = Depends(require_role([UserRole.CUSTOMER]))):
-    wishlist = await db.wishlists.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
-    if not wishlist:
-        return {"products": []}
-    products = []
-    for pid in wishlist.get("product_ids", []):
-        p = await db.products.find_one({"product_id": pid}, {"_id": 0})
-        if p:
-            products.append(p)
-    return {"products": products}
-
-@api_router.delete("/wishlist/{product_id}")
-async def remove_from_wishlist(
-    product_id: str,
-    current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
-):
-    wishlist = await db.wishlists.find_one({"customer_id": current_user["user_id"]}, {"_id": 0})
-    if not wishlist:
-        raise HTTPException(status_code=404, detail="Wishlist not found")
-    product_ids = [pid for pid in wishlist.get("product_ids", []) if pid != product_id]
-    await db.wishlists.update_one(
-        {"customer_id": current_user["user_id"]},
-        {"$set": {"product_ids": product_ids, "updated_at": datetime.now(timezone.utc).isoformat()}},
-    )
-    return {"message": "Product removed from wishlist"}
-
-# ==================== REVIEWS ====================
-@api_router.post("/reviews", response_model=Review)
-async def create_review(
-    review_input: ReviewCreate,
-    current_user: Dict = Depends(require_role([UserRole.CUSTOMER])),
-):
-    if await db.reviews.find_one(
-        {"product_id": review_input.product_id, "customer_id": current_user["user_id"]},
-        {"_id": 0},
-    ):
-        raise HTTPException(status_code=400, detail="You have already reviewed this product")
-
-    review_data = review_input.model_dump()
-    review_data["customer_id"] = current_user["user_id"]
-    review_data["customer_name"] = current_user["name"]
-    review_obj = Review(**review_data)
-    await db.reviews.insert_one(review_obj.model_dump())
-    return review_obj
-
-@api_router.get("/reviews/{product_id}", response_model=List[Review])
-async def get_product_reviews(product_id: str):
-    reviews = await db.reviews.find({"product_id": product_id}, {"_id": 0}).to_list(1000)
-    return [Review(**r) for r in reviews]
-
-# ==================== ADMIN ====================
-@api_router.get("/admin/users")
-async def get_all_users(current_user: Dict = Depends(require_role([UserRole.ADMIN]))):
-    return await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
-
+# ==================== ADMIN & ANALYTICS ====================
 @api_router.put("/admin/verify-seller/{seller_id}")
 async def verify_seller(
     seller_id: str,
@@ -792,31 +634,9 @@ async def verify_seller(
         {"seller_id": seller_id}, {"$set": {"verified": body.verified}}
     )
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Seller store not found")
-    return {"message": f"Seller {'verified' if body.verified else 'unverified'} successfully"}
+        raise HTTPException(status_code=404, detail="Store not found")
+    return {"message": "Updated"}
 
-@api_router.get("/admin/analytics")
-async def get_analytics(current_user: Dict = Depends(require_role([UserRole.ADMIN]))):
-    total_users = await db.users.count_documents({})
-    total_sellers = await db.users.count_documents({"role": UserRole.SELLER})
-    total_customers = await db.users.count_documents({"role": UserRole.CUSTOMER})
-    total_products = await db.products.count_documents({})
-    total_orders = await db.orders.count_documents({})
-
-    paid = [OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]
-    orders = await db.orders.find({"status": {"$in": paid}}, {"_id": 0}).to_list(1000)
-    total_revenue = sum(o["total_amount"] for o in orders)
-
-    return {
-        "total_users": total_users,
-        "total_sellers": total_sellers,
-        "total_customers": total_customers,
-        "total_products": total_products,
-        "total_orders": total_orders,
-        "total_revenue": total_revenue,
-    }
-
-# ==================== FEATURED ====================
 @api_router.get("/featured/farmers")
 async def get_featured_farmers():
     return await db.stores.find({"verified": True}, {"_id": 0}).to_list(6)
@@ -826,14 +646,9 @@ async def get_featured_products():
     products = await db.products.find({"organic_certified": True}, {"_id": 0}).limit(8).to_list(8)
     return [Product(**p) for p in products]
 
-# ==================== MOUNT & RUN ====================
+# ==================== MOUNT ROUTER ====================
 app.include_router(api_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "server:app",
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-        reload=True,
-    )
+    uvicorn.run("server:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True)

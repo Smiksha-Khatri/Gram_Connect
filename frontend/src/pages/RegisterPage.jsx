@@ -127,7 +127,7 @@ const RegisterPage = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="input-field w-full pl-10"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07A5F]"
                     placeholder="Your name"
                     required
                     data-testid="register-name-input"
@@ -146,7 +146,7 @@ const RegisterPage = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="input-field w-full pl-10"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07A5F]"
                     placeholder="your@email.com"
                     required
                     data-testid="register-email-input"
@@ -165,7 +165,7 @@ const RegisterPage = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="input-field w-full pl-10"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07A5F]"
                     placeholder="+91 9876543210"
                     data-testid="register-phone-input"
                   />
@@ -183,7 +183,7 @@ const RegisterPage = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="input-field w-full pl-10"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07A5F]"
                     placeholder="••••••••"
                     required
                     data-testid="register-password-input"

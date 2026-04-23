@@ -52,6 +52,9 @@ code {
     * {
         @apply border-border;
     }
+    input, button, textarea {
+  @apply border;
+}
     body {
         @apply bg-[#F4F1DE] text-foreground;
     }
@@ -102,4 +105,24 @@ code {
         border-top-color: inherit;
         border-bottom-color: inherit;
     }
+}
+@layer components {
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg bg-white 
+           focus:outline-none focus:ring-2 focus:ring-[#E07A5F] 
+           transition;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md border border-gray-100;
+  }
+
+  .btn-primary {
+    @apply bg-[#E07A5F] text-white px-6 py-3 rounded-lg 
+           hover:bg-[#D0694E] transition font-semibold;
+  }
+
+  .section-padding {
+    @apply px-4 py-10 md:px-8 lg:px-12;
+  }
 }
